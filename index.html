@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽獎轉盤</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        .result {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .wrapper {
+            position: relative;
+            width: 350px;
+            height: 350px;
+        }
+        canvas {
+            border: 6px solid #961d02;
+            border-radius: 50%;
+        }
+        .pointer {
+            position: absolute;
+            top: 47%;
+            left: 51%;
+            transform: translate(-40%, -40%) rotate(0deg);
+            width: 0;
+            height: 0;
+            border-radius: 150%;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 40px solid black;
+            z-index: 2;
+        }
+        
+}
+        
+        /* 白色固定點 */
+        .center-dot {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 20px;
+          height: 20px;
+          background-color: #fff; /* 白色 */
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 3;
+        }
+        button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #88c0d0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #81a1c1;
+        }
+ /* 彩帶雨的樣式 */
+.confetti {
+    position: absolute;
+    top: -50px;
+    width: 10px;
+    height: 20px;
+    animation: fall 2s infinite;
+    border-radius: 5px;
+}
+
+/* 顏色加深的版本 */
+.confetti:nth-child(odd) {
+    background-color: #d32f2f; /* 深紅色 */
+}
+.confetti:nth-child(2n) {
+    background-color: #f57c00; /* 深橙色 */
+}
+.confetti:nth-child(3n) {
+    background-color: #c2185b; /* 深粉紅色 */
+}
+.confetti:nth-child(4n) {
+    background-color: #1976d2; /* 深藍色 */
+}
+.confetti:nth-child(5n) {
+    background-color: #388e3c; /* 深綠色 */
+}
+.confetti:nth-child(6n) {
+    background-color: #8e24aa; /* 深紫色 */
+}
+.confetti:nth-child(7n) {
+    background-color: #0288d1; /* 藍色 */
+}
+.confetti:nth-child(8n) {
+    background-color: #8e24aa; /* 紫色 */
+}
+.confetti:nth-child(9n) {
+    background-color: #7b1fa2; /* 紫紅色 */
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="result" id="result">請點擊按鈕開始抽獎</div>
+    <div class="wrapper">
+        <canvas id="wheel" width="350" height="350"></canvas>
+        <div class="pointer">
+            <div class="center-dot"></div>
+        </div>
+    </div>
+    <button id="spin">開始抽獎</button>
+
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const resultDisplay = document.getElementById('result');
+        const spinButton = document.getElementById('spin');
+        const segments = [
+            "再接再厲", "再來一次", "大獎", "幸運獎", "Line Point 1點", 
+            "幸運獎", "再來一次", "再接再厲", "1元現金", "獎品10", 
+            "1元現金", "再接再厲"
+        ];
+        const segmentColors = ["#961d02", "#ffebe6", "#ff0000", "#ffebe6", 
+                               "#961d02", "#ffebe6", "#961d02", "#ffebe6", 
+                               "#961d02", "#ffebe6", "#961d02", "#ffebe6"];
+        const totalSegments = segments.length;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = canvas.width / 2 - 9; // 留出邊距
+        let rotation = 0;
+        let isSpinning = false;
+
+        // 繪製轉盤
+        function drawWheel() {
+            
+const borderRadius = radius + 4;  // 外圈的半徑，比內部圓盤稍大
+            
+            // 設置邊框顏色和寬度
+            ctx.strokeStyle = '#FF0000';  // 邊框顏色：紅色
+            ctx.lineWidth = 11;  // 邊框粗細
+
+            const anglePerSegment = (2 * Math.PI) / totalSegments;
+            for (let i = 0; i < totalSegments; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, i * anglePerSegment, (i + 1) * anglePerSegment);
+                ctx.fillStyle = segmentColors[i % segmentColors.length];
+                ctx.fill();
+
+                // 繪製文字
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate((i + 0.5) * anglePerSegment);
+                ctx.textAlign = "right";
+                let fontColor = segmentColors[i] =="#961d02" ? "#ffebe6" : "#961d02";
+                let fontSize = 25;
+                if(i===2) {
+                    fontColor = "white";
+                    fontSize = 35;
+                }
+                ctx.fillStyle = fontColor;
+                ctx.font = fontSize + "px Arial bold";
+                ctx.fillText(segments[i], radius - 10, 10);
+                ctx.restore();
+            }
+// 繪製外圈邊框
+ctx.beginPath();
+ctx.arc(centerX, centerY, borderRadius, 0, Math.PI * 2);  // 外圓
+ctx.stroke();  // 繪製邊框
+ctx.closePath();
+            
+        }
+
+        // 開始旋轉
+let spinCount = 0; // 用於追蹤抽獎次數
+
+function spinWheel() {
+    if (isSpinning) return; // 防止重複點擊
+    isSpinning = true;
+    spinCount++; // 計數器 +1
+    
+    resultDisplay.textContent = "轉盤旋轉中...";
+
+    let spinAngle;
+    if (spinCount === 3) {
+        // 第三次轉盤時，強制轉到獎品6
+        spinAngle = 360 * 3 + (360 / totalSegments) * 5 + 6; // 5是獎品6的位置（從0開始）
+    } else {
+        // 前兩次轉盤，隨機選擇角度，確保不會停在獎品6
+        do {
+            spinAngle = Math.random() * 360 + 1440; // 隨機選擇角度，並保證轉至少兩圈
+        } while (getSegmentIndex(spinAngle) === 5); // 如果隨機選擇的角度落在獎品6，重新隨機
+    }
+
+    const duration = 6000; // 持續時間 (毫秒)
+    const startTime = Date.now();
+
+    function rotate() {
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1); // 緩動進度
+        const easing = 1 - Math.pow(1 - progress, 3); // 緩動函數 (加速減速)
+        rotation = spinAngle * easing;
+
+        if (progress < 1) {
+            requestAnimationFrame(rotate);
+        } else {
+            const finalAngle = rotation % 360;
+            const selectedIndex = getSegmentIndex(finalAngle); // 計算最終選中的獎品
+let result = selectedIndex<3 ? selectedIndex+10 : selectedIndex-2;
+                                resultDisplay.textContent = `恭喜獲得：` + segments[result-1];
+                                if(result==3)
+triggerConfetti(); // 開始彩帶雨動畫
+            isSpinning = false;
+        }
+
+        draw();
+    }
+
+    rotate();
+}
+
+// 根據角度計算最終選中的獎品索引
+function getSegmentIndex(angle) {
+    const finalAngle = angle % 360;
+    return Math.floor((finalAngle / 360) * totalSegments) % totalSegments;
+}
+
+
+        // 彩帶雨動畫
+let confettiInterval = null; // 用來控制彩帶動畫的間隔
+
+// 開始彩帶雨動畫
+function triggerConfetti() {
+    if (confettiInterval) return; // 如果已有彩帶雨在播放，則不再啟動
+
+    // 持續生成彩帶直到按下按鈕停止
+    confettiInterval = setInterval(() => {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        document.body.appendChild(confetti);
+
+        // 每隔 2 秒刪除過期的彩帶
+        setTimeout(() => confetti.remove(), 3000);
+    }, 50); // 每 50 毫秒生成一個彩帶，這樣數量會增加
+}
+
+// 停止彩帶雨
+function stopConfetti() {
+    clearInterval(confettiInterval);
+    confettiInterval = null;
+    // 可以選擇在這裡清理頁面上的剩餘彩帶
+    const confettis = document.querySelectorAll('.confetti');
+    confettis.forEach(confetti => confetti.remove());
+}
+
+// 按鈕觸發的事件
+spinButton.addEventListener('click', () => {
+    spinWheel();
+    stopConfetti();  // 點擊時停止彩帶雨
+});
+        /*function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            resultDisplay.textContent = "轉盤旋轉中...";
+            const spinAngle = Math.random() * 360 + 720; // 2圈以上再隨機角度
+            const duration = 4000; // 持續時間 (毫秒)
+            const startTime = Date.now();
+
+            function rotate() {
+                const currentTime = Date.now();
+                const elapsedTime = currentTime - startTime;
+                const progress = Math.min(elapsedTime / duration, 1); // 緩動進度
+                const easing = 1 - Math.pow(1 - progress, 3); // 緩動函數 (加速減速)
+                rotation = spinAngle * easing;
+
+                if (progress < 1) {
+                    requestAnimationFrame(rotate);
+                } else {
+                    const finalAngle = rotation % 360;
+                    const selectedIndex = Math.floor((finalAngle / 360) * totalSegments) % totalSegments;
+                    let result = selectedIndex<3 ? selectedIndex+10 : selectedIndex-2;
+                    resultDisplay.textContent = `恭喜獲得：` + segments[result-1];
+                    isSpinning = false;
+                }
+
+                draw();
+            }
+
+            rotate();
+        }*/
+
+        // 繪製畫布
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate((-rotation * Math.PI) / 180); // 指針方向固定
+            ctx.translate(-centerX, -centerY);
+            drawWheel();
+            ctx.restore();
+        }
+
+        spinButton.addEventListener('click', spinWheel);
+        draw(); // 初始化繪製
+    </script>
+</body>
+</html>
